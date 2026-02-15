@@ -1,0 +1,55 @@
+plugins {
+    id "java"
+    id "com.palantir.docker" version "0.36.0"
+    id 'org.jetbrains.kotlin.jvm' version '2.2.21'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+
+def pluginsDir = file("$projectDir/plugins")
+def extractedDir = file("$buildDir/extracted-plugins/plugins")
+
+tasks.register("unzipPlugins", Copy) {
+    from {
+        fileTree(pluginsDir).matching { include "*.zip" }.collect { zipTree(it) }
+    }
+    into extractedDir
+}
+tasks.register("copyJarToPlugins", Copy) {
+    dependsOn(tasks.jar)
+
+    from(tasks.jar.archiveFile)
+    into("$buildDir/extracted-plugins/plugins/typik-plugin")
+}
+
+tasks.named("dockerPrepare").configure {
+    dependsOn("unzipPlugins")
+    dependsOn("copyJarToPlugins")
+}
+
+docker {
+    name "wait-kafka-connector:latest"
+
+    dockerfile file('Dockerfile')
+
+    files("app", "$buildDir/extracted-plugins")
+
+}
+
+dependencies {
+    implementation("org.apache.kafka:connect-api:3.8.0")
+    implementation("org.apache.kafka:connect-json:3.8.0")
+    implementation("org.slf4j:slf4j-api:2.0.17")
+
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0")
+}

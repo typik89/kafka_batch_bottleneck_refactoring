@@ -1,0 +1,6 @@
+rootProject.name = 'kafka-batch-bottleneck-refactoring'
+
+include 'app'
+include 'compose'
+include 'connector'
+

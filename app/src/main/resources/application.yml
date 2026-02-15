@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: kafka-batch-bottleneck-refactoring
+
+server:
+  port: 8080
+
+auth-service:
+  base-url: http://localhost:8081
+
+kafka:
+  bootstrapServers: localhost:9092
+  consumer:
+    topic: testTopic
+    #group-id: batch-group
+    group-id: at-least-once-group
+    max-poll-records: 50
+
+# Настройки Actuator и метрик
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+# Дополнительные настройки логирования для отладки
+logging:
+  level:
+    org.springframework.web: INFO
+    ru.typik: DEBUG
+    reactor.kafka: DEBUG
+

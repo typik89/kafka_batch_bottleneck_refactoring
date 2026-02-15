@@ -1,0 +1,23 @@
+plugins {
+    id 'com.avast.gradle.docker-compose' version '0.17.7'
+}
+
+
+dockerCompose {
+    useComposeFiles = [
+            'external-compose.yml',
+            'kafka-compose.yml',
+            'connect-compose.yml',
+            'monitoring-compose.yml']
+    projectName = 'batch-bottleneck'
+}
+
+tasks.register('batchComposeUp') {
+    group = 'docker-compose'
+    dependsOn composeUp
+}
+// Соответствующие таски для остановки
+tasks.register('batchComposeDown') {
+    group = 'docker-compose'
+    dependsOn composeDown
+}

@@ -1,0 +1,36 @@
+[
+  {
+    "priority": 10,
+    "httpRequest": {
+      "method": "POST",
+      "path": "/authData",
+      "body": {
+        "type": "JSON_PATH",
+        "jsonPath": "$[?(@.additionalData == '0')]"
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "delay": {
+        "timeUnit": "MILLISECONDS",
+        "value": 1000
+      },
+      "body": "{ \"result\": \"slow\" }"
+    }
+  },
+  {
+    "priority": 1,
+    "httpRequest": {
+      "method": "POST",
+      "path": "/authData"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "delay": {
+        "timeUnit": "MILLISECONDS",
+        "value": 200
+      },
+      "body": "{ \"result\": \"fast\" }"
+    }
+  }
+]

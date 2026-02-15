@@ -1,0 +1,40 @@
+{
+  "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+  "connection.url": "jdbc:postgresql://postgres:5432/wait",
+  "connection.user": "postgres",
+  "connection.password": "postgres",
+  "connection.attempts": "10",
+  "connection.backoff.ms": "10000",
+
+  "dialect.name": "PostgreSqlDatabaseDialect",
+  "table.whitelist": "wait",
+  "topic.prefix": "",
+
+  "mode": "timestamp+incrementing",
+  "incrementing.column.name": "id",
+  "timestamp.column.name": "wait_expiration_time",
+
+  "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+
+  "transforms": "createKey,extractKey,addHeader,copyOriginalHeaders,extractValue,deadLetterTopic",
+
+  "transforms.createKey.type": "org.apache.kafka.connect.transforms.ValueToKey",
+  "transforms.createKey.fields": "original_key",
+
+  "transforms.extractKey.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+  "transforms.extractKey.field": "original_key",
+
+  "transforms.extractValue.type": "org.apache.kafka.connect.transforms.ExtractField$Value",
+  "transforms.extractValue.field": "body",
+
+  "transforms.addHeader.type": "org.apache.kafka.connect.transforms.InsertHeader",
+  "transforms.addHeader.header": "Exception",
+  "transforms.addHeader.value.literal": "ExpiredRecordException",
+
+  "transforms.copyOriginalHeaders.type": "ru.typik.connector.transforms.JsonHeadersToKafkaHeaders",
+  "transforms.copyOriginalHeaders.json.field": "original_headers",
+
+  "transforms.deadLetterTopic.type": "org.apache.kafka.connect.transforms.RegexRouter",
+  "transforms.deadLetterTopic.regex": "wait",
+  "transforms.deadLetterTopic.replacement": "deadLetterTopic"
+}

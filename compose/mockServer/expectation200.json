@@ -1,0 +1,16 @@
+[
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/authData"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "delay": {
+        "timeUnit": "MILLISECONDS",
+        "value": 200
+      },
+      "body": "{ \"result\": \"fast\" }"
+    }
+  }
+]

@@ -1,0 +1,9 @@
+services:
+  mockServer:
+    image: mockserver/mockserver:5.14.0
+    ports:
+      - 8081:1080
+    environment:
+      MOCKSERVER_INITIALIZATION_JSON_PATH: /config/expectation.json
+    volumes:
+      - ./mockServer/expectation.json:/config/expectation.json
