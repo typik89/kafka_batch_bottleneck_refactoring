@@ -74,7 +74,7 @@ class AtLeastOnceProcessing(
                             log.error("Error in processing ${record.offset()}", ex)
                             sendDeadLetter(record, ex)
                         }
-                    //.then(Mono.defer { sendTombstoneWaitRecord(recordWaitWrapper) })
+                        .then(Mono.defer { sendTombstoneWaitRecord(recordWaitWrapper) })
 
                 },
                 kafkaConfigurationProperties.consumer.maxPollRecords
