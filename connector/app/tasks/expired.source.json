@@ -7,16 +7,16 @@
   "connection.backoff.ms": "10000",
 
   "dialect.name": "PostgreSqlDatabaseDialect",
-  "table.whitelist": "wait",
-  "topic.prefix": "",
+  "topic.prefix": "deadLetterTopic",
 
   "mode": "timestamp+incrementing",
+  "query": "SELECT * FROM (SELECT * FROM wait WHERE wait_expiration_time <= CURRENT_TIMESTAMP) as _t1",
   "incrementing.column.name": "id",
   "timestamp.column.name": "wait_expiration_time",
 
   "value.converter": "org.apache.kafka.connect.storage.StringConverter",
 
-  "transforms": "createKey,extractKey,addHeader,copyOriginalHeaders,extractValue,deadLetterTopic",
+  "transforms": "createKey,extractKey,addHeader,copyOriginalHeaders,extractValue",
 
   "transforms.createKey.type": "org.apache.kafka.connect.transforms.ValueToKey",
   "transforms.createKey.fields": "original_key",
@@ -32,9 +32,5 @@
   "transforms.addHeader.value.literal": "ExpiredRecordException",
 
   "transforms.copyOriginalHeaders.type": "ru.typik.connector.transforms.JsonHeadersToKafkaHeaders",
-  "transforms.copyOriginalHeaders.json.field": "original_headers",
-
-  "transforms.deadLetterTopic.type": "org.apache.kafka.connect.transforms.RegexRouter",
-  "transforms.deadLetterTopic.regex": "wait",
-  "transforms.deadLetterTopic.replacement": "deadLetterTopic"
+  "transforms.copyOriginalHeaders.json.field": "original_headers"
 }

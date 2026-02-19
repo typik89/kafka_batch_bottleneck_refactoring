@@ -16,7 +16,6 @@ tasks.register('batchComposeUp') {
     group = 'docker-compose'
     dependsOn composeUp
 }
-// Соответствующие таски для остановки
 tasks.register('batchComposeDown') {
     group = 'docker-compose'
     dependsOn composeDown

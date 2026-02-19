@@ -16,7 +16,7 @@ kafka:
     group-id: at-least-once-group
     max-poll-records: 50
 
-# Настройки Actuator и метрик
+
 management:
   endpoints:
     web:
@@ -33,7 +33,6 @@ management:
       percentiles-histogram:
         http.server.requests: true
 
-# Дополнительные настройки логирования для отладки
 logging:
   level:
     org.springframework.web: INFO

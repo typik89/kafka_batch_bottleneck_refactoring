@@ -82,7 +82,7 @@ class AtLeastOnceProcessingTest {
         atLeastOnceProcessing = AtLeastOnceProcessing(kafkaProperties, recordProcessor)
         atLeastOnceProcessing.init()
 
-        // Инициализируем отправителя и получателя для тестов
+
         kafkaSender = kafkaProperties.createSender()
         kafkaReceiver = kafkaProperties.createReceiver()
     }

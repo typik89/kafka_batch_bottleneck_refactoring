@@ -9,13 +9,12 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      # Монтируем ваш скрипт инициализации
       - ../connector/db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   kafka-connect:
     image: wait-kafka-connector:latest
     depends_on:
-      #- kafka
+      - kafka
       - postgres
     environment:
       CONNECT_BOOTSTRAP_SERVERS: "kafka:9093"

@@ -25,10 +25,10 @@ services:
     entrypoint: [ "/bin/sh", "-c" ]
     command: |
       "
-      # Ожидаем порт
+      
       while ! nc -z kafka 9093; do sleep 1; done
-
-      # Проходим по списку топиков
+      
+      
       for topic in testTopic waitTopic deadLetterTopic; do
         /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9093 --create --if-not-exists --topic $$topic --replication-factor 1 --partitions 1
       done
