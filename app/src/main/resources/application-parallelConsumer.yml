@@ -1,0 +1,12 @@
+kafka:
+  consumer:
+    group-id: pc-group
+
+logging:
+  level:
+    #io.confluent.parallelconsumer.internal.WorkManager: TRACE
+    #io.confluent.parallelconsumer.internal.ShardManager: TRACE
+    #org.apache.kafka.clients.consumer.KafkaConsumer: TRACE
+    #org.apache.kafka.clients.consumer.internals.Fetcher: TRACE
+    io.confluent.parallelconsumer.internal.BrokerPollSystem: INFO
+    io.confluent.parallelconsumer.internal.AbstractParallelEoSStreamProcessor: INFO

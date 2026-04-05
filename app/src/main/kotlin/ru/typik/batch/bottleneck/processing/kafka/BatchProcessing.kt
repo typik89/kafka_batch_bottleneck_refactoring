@@ -9,12 +9,13 @@ import org.springframework.stereotype.Service
 import reactor.core.Disposable
 import reactor.core.publisher.Mono
 import reactor.kafka.receiver.KafkaReceiver
+import reactor.kafka.receiver.ReceiverOptions
 import reactor.kafka.sender.KafkaSender
 import ru.typik.batch.bottleneck.processing.kafka.utils.sendDeadLetter
 import ru.typik.batch.bottleneck.processing.processor.RecordProcessor
 import ru.typik.batch.bottleneck.processing.properties.KafkaConfigurationProperties
-import ru.typik.batch.bottleneck.processing.properties.createReceiver
-import ru.typik.batch.bottleneck.processing.properties.createTransactionalSender
+import ru.typik.batch.bottleneck.processing.properties.consumerConfig
+import ru.typik.batch.bottleneck.processing.properties.createSender
 
 @Profile("batch")
 @Service
@@ -30,8 +31,13 @@ class BatchProcessing(
 
     @PostConstruct
     fun init() {
-        sender = kafkaConfigurationProperties.createTransactionalSender()
-        kafkaReceiver = kafkaConfigurationProperties.createReceiver()
+        kafkaReceiver = KafkaReceiver.create(
+            ReceiverOptions.create<String?, String?>(
+                kafkaConfigurationProperties.consumerConfig(enabledAutoCommit = false)
+            )
+                .subscription(listOf(kafkaConfigurationProperties.consumer.topic))
+        )
+        sender = kafkaConfigurationProperties.createSender(isTransactional = true)
 
         kafkaTask = kafkaReceiver.receiveExactlyOnce(sender.transactionManager())
             .concatMap<Void> { batch ->

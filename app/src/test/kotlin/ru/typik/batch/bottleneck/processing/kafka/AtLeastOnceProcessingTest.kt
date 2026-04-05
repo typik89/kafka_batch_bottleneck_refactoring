@@ -27,7 +27,6 @@ import ru.typik.batch.bottleneck.processing.kafka.header.WaitHeaders.EXPIRATION_
 import ru.typik.batch.bottleneck.processing.kafka.header.WaitHeaders.EXPIRATION_UUID
 import ru.typik.batch.bottleneck.processing.processor.RecordProcessor
 import ru.typik.batch.bottleneck.processing.properties.KafkaConfigurationProperties
-import ru.typik.batch.bottleneck.processing.properties.createReceiver
 import ru.typik.batch.bottleneck.processing.properties.createSender
 import java.time.Duration
 import java.util.*
@@ -83,8 +82,7 @@ class AtLeastOnceProcessingTest {
         atLeastOnceProcessing.init()
 
 
-        kafkaSender = kafkaProperties.createSender()
-        kafkaReceiver = kafkaProperties.createReceiver()
+        kafkaSender = kafkaProperties.createSender(isTransactional = false)
     }
 
     @Test
@@ -92,7 +90,7 @@ class AtLeastOnceProcessingTest {
         val key = "success${System.currentTimeMillis()}"
         val value = "value${UUID.randomUUID()}"
 
-        val sendResult = kafkaSender.sendBlocking(PROCESS_TOPIC, key, value)
+        val sendResult = kafkaSender.sendBlocking(PROCESS_TOPIC, key, value)!!
 
         val records = await().atMost(Duration.ofSeconds(10))
             .until({

@@ -1,7 +1,6 @@
 plugins {
     id "java"
-    id "com.palantir.docker" version "0.36.0"
-    id 'org.jetbrains.kotlin.jvm' version '2.2.21'
+    id 'org.jetbrains.kotlin.jvm'
 }
 
 java {
@@ -17,6 +16,8 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
 
 def pluginsDir = file("$projectDir/plugins")
 def extractedDir = file("$buildDir/extracted-plugins/plugins")
+def dockerContextDir = layout.buildDirectory.dir("docker")
+def dockerImageName = "wait-kafka-connector:latest"
 
 tasks.register("unzipPlugins", Copy) {
     from {
@@ -31,18 +32,44 @@ tasks.register("copyJarToPlugins", Copy) {
     into("$buildDir/extracted-plugins/plugins/typik-plugin")
 }
 
-tasks.named("dockerPrepare").configure {
+tasks.register("dockerPrepare") {
     dependsOn("unzipPlugins")
     dependsOn("copyJarToPlugins")
 }
 
-docker {
-    name "wait-kafka-connector:latest"
+tasks.register("prepareDockerContext", Sync) {
+    dependsOn("unzipPlugins")
+    dependsOn("copyJarToPlugins")
 
-    dockerfile file('Dockerfile')
+    into(dockerContextDir)
 
-    files("app", "$buildDir/extracted-plugins")
+    from("Dockerfile")
+    from("app/scripts") {
+        into("scripts")
+    }
+    from("app/tasks") {
+        into("tasks")
+    }
+    from(extractedDir) {
+        into("plugins")
+    }
+}
 
+tasks.register("docker", Exec) {
+    group = "docker"
+    description = "Builds the connector Docker image"
+    dependsOn("prepareDockerContext")
+
+    workingDir(dockerContextDir.get().asFile)
+    commandLine("docker", "build", "-t", dockerImageName, ".")
+}
+
+tasks.register("dockerTag") {
+    group = "docker"
+    description = "Prints the connector Docker image tag"
+    doLast {
+        println(dockerImageName)
+    }
 }
 
 dependencies {

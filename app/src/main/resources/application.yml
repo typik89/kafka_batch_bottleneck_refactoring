@@ -12,9 +12,7 @@ kafka:
   bootstrapServers: localhost:9092
   consumer:
     topic: testTopic
-    #group-id: batch-group
-    group-id: at-least-once-group
-    max-poll-records: 50
+    max-poll-records: 10
 
 
 management:
@@ -34,8 +32,10 @@ management:
         http.server.requests: true
 
 logging:
+  #file:
+  #  name: app/out/app.log
   level:
     org.springframework.web: INFO
     ru.typik: DEBUG
-    reactor.kafka: DEBUG
+    #reactor.kafka: DEBUG
 

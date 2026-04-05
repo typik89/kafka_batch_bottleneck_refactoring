@@ -1,8 +1,22 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '2.2.21'
-    id 'org.jetbrains.kotlin.plugin.spring' version '2.2.21'
+    id 'org.jetbrains.kotlin.jvm'
+    id 'org.jetbrains.kotlin.plugin.spring'
     id 'org.springframework.boot' version '3.5.10'
     id("io.spring.dependency-management") version "1.1.4"
+}
+
+sourceSets {
+    loadgen {
+        kotlin.srcDir('src/loadgen/kotlin')
+        resources.srcDir('src/loadgen/resources')
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += output + sourceSets.main.output
+    }
+}
+
+configurations {
+    loadgenImplementation.extendsFrom implementation
+    loadgenRuntimeOnly.extendsFrom runtimeOnly
 }
 
 dependencies {
@@ -16,6 +30,8 @@ dependencies {
 
     implementation 'io.projectreactor.kafka:reactor-kafka:1.3.25'
     implementation 'io.projectreactor.kotlin:reactor-kotlin-extensions:1.3.0'
+    implementation 'io.confluent.parallelconsumer:parallel-consumer-core:0.5.3.3'
+    implementation 'io.confluent.parallelconsumer:parallel-consumer-reactor:0.5.3.3'
 
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
@@ -27,6 +43,18 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:5.12.0'
     testImplementation 'org.testcontainers:kafka'
     testImplementation 'org.testcontainers:junit-jupiter'
+
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+
+}
+
+springBoot {
+    mainClass = 'ru.typik.batch.bottleneck.processing.ApplicationKt'
+}
+
+tasks.named("bootBuildImage") {
+    imageName = "kafka-batch-bottleneck-app:latest"
 }
 
 test {
@@ -34,3 +62,9 @@ test {
     jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED'
 }
 
+tasks.register('runLoadGenerator', JavaExec) {
+    group = 'application'
+    description = 'Runs the Kafka load generator'
+    classpath = sourceSets.loadgen.runtimeClasspath
+    mainClass = 'ru.typik.batch.bottleneck.processing.KafkaTestDataGeneratorKt'
+}

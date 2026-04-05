@@ -1,0 +1,14 @@
+services:
+  app:
+    image: kafka-batch-bottleneck-app:latest
+    depends_on:
+      - kafka
+      - mockServer
+      - kafka-connect
+    environment:
+      SPRING_PROFILES_ACTIVE: atLeastOnce
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9093
+      KAFKA_CONSUMER_MAX_POLL_RECORDS: 50
+      AUTH_SERVICE_BASE_URL: http://mockServer:1080
+    ports:
+      - "8080:8080"

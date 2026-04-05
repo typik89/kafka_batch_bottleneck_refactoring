@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service
 import reactor.core.Disposable
 import reactor.core.publisher.Mono
 import reactor.kafka.receiver.KafkaReceiver
+import reactor.kafka.receiver.ReceiverOptions
 import reactor.kafka.receiver.ReceiverRecord
 import reactor.kafka.sender.KafkaSender
 import ru.typik.batch.bottleneck.processing.kafka.header.WaitHeaders.EXPIRATION_TIME
@@ -19,7 +20,7 @@ import ru.typik.batch.bottleneck.processing.kafka.utils.sendDeadLetter
 import ru.typik.batch.bottleneck.processing.kafka.utils.sendWithOriginalHeaders
 import ru.typik.batch.bottleneck.processing.processor.RecordProcessor
 import ru.typik.batch.bottleneck.processing.properties.KafkaConfigurationProperties
-import ru.typik.batch.bottleneck.processing.properties.createReceiver
+import ru.typik.batch.bottleneck.processing.properties.consumerConfig
 import ru.typik.batch.bottleneck.processing.properties.createSender
 import java.time.LocalDateTime
 import java.util.*
@@ -43,8 +44,13 @@ class AtLeastOnceProcessing(
 
     @PostConstruct
     fun init() {
-        kafkaReceiver = kafkaConfigurationProperties.createReceiver()
-        sender = kafkaConfigurationProperties.createSender()
+        kafkaReceiver = KafkaReceiver.create(
+            ReceiverOptions.create<String?, String?>(
+                kafkaConfigurationProperties.consumerConfig(enabledAutoCommit = true)
+            )
+                .subscription(listOf(kafkaConfigurationProperties.consumer.topic))
+        )
+        sender = kafkaConfigurationProperties.createSender(isTransactional = false)
 
         kafkaTask = kafkaReceiver.receive(1)
             .doOnNext { log.info("Received offset: ${it.offset()}") }
@@ -65,11 +71,8 @@ class AtLeastOnceProcessing(
             .flatMap(
                 { recordWaitWrapper ->
                     val record = recordWaitWrapper.record
-                    Mono.fromCallable { log.info("processing ${record.offset()}") }
-                        .then(recordProcessor.invoke(record))
-                        .doOnTerminate {
-                            log.info("processed ${record.offset()}")
-                        }
+                    recordProcessor.invoke(record)
+                        .doOnTerminate { log.info("processed ${record.offset()}") }
                         .onErrorResume { ex ->
                             log.error("Error in processing ${record.offset()}", ex)
                             sendDeadLetter(record, ex)

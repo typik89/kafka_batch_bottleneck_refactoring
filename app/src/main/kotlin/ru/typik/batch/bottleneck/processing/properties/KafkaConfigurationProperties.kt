@@ -5,8 +5,6 @@ import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.springframework.boot.context.properties.ConfigurationProperties
-import reactor.kafka.receiver.KafkaReceiver
-import reactor.kafka.receiver.ReceiverOptions
 import reactor.kafka.sender.KafkaSender
 import reactor.kafka.sender.SenderOptions
 import java.util.*
@@ -26,44 +24,29 @@ data class KafkaConfigurationProperties(
     )
 }
 
-
-fun KafkaConfigurationProperties.createReceiver(): KafkaReceiver<String, String> =
-    KafkaReceiver.create(
-        ReceiverOptions.create<String, String>(
-            mapOf(
-                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
-                ConsumerConfig.GROUP_ID_CONFIG to consumer.groupId,
-                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
-                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
-                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
-                ConsumerConfig.ISOLATION_LEVEL_CONFIG to "read_committed",
-                ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG to "100",
-                ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to "true",
-                ConsumerConfig.MAX_POLL_RECORDS_CONFIG to consumer.maxPollRecords
-            )
-        )
-            .subscription(listOf(consumer.topic))
+fun KafkaConfigurationProperties.consumerConfig(enabledAutoCommit: Boolean) =
+    mapOf(
+        ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
+        ConsumerConfig.GROUP_ID_CONFIG to consumer.groupId,
+        ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
+        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
+        ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
+        ConsumerConfig.ISOLATION_LEVEL_CONFIG to "read_committed",
+        ConsumerConfig.MAX_POLL_RECORDS_CONFIG to consumer.maxPollRecords,
+        ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG to "100",
+        ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to enabledAutoCommit.toString(),
     )
 
-fun KafkaConfigurationProperties.createTransactionalSender(): KafkaSender<String, String> =
-    KafkaSender.create(
-        SenderOptions.create(
-            mapOf(
-                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
-                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
-                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
-                ProducerConfig.TRANSACTIONAL_ID_CONFIG to UUID.randomUUID().toString()
-            )
-        )
-    )
 
-fun KafkaConfigurationProperties.createSender(): KafkaSender<String, String> =
+fun KafkaConfigurationProperties.createSender(isTransactional: Boolean): KafkaSender<String, String> =
     KafkaSender.create(
         SenderOptions.create(
             mapOf(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
                 ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
                 ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java
-            )
+            ) + if (isTransactional) mapOf(
+                ProducerConfig.TRANSACTIONAL_ID_CONFIG to UUID.randomUUID().toString()
+            ) else emptyMap()
         )
     )

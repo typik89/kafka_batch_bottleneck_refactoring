@@ -2,21 +2,43 @@ plugins {
     id 'com.avast.gradle.docker-compose' version '0.17.7'
 }
 
+def composeFilesByTask = [
+        batch           : [
+                'external-compose.yml',
+                'kafka-compose.yml',
+                'app-compose-batch.yml',
+                'monitoring-compose.yml'],
+        devBatch        : [
+                'external-compose.yml',
+                'kafka-compose.yml',
+                'monitoring-compose.yml'],
+        parallelConsumer: [
+                'external-compose.yml',
+                'kafka-compose.yml',
+                'app-compose-parallelConsumer.yml',
+                'monitoring-compose.yml'],
+        devParallelConsumer: [
+                'external-compose.yml',
+                'kafka-compose.yml',
+                'monitoring-compose.yml'],
+        atLeastOnce     : [
+                'external-compose.yml',
+                'kafka-compose.yml',
+                'app-compose-atLeastOnce.yml',
+                'connect-compose.yml',
+                'monitoring-compose.yml'],
+        devAtLeastOnce  : [
+                'external-compose.yml',
+                'kafka-compose.yml',
+                'connect-compose.yml',
+                'monitoring-compose.yml']
+]
 
 dockerCompose {
-    useComposeFiles = [
-            'external-compose.yml',
-            'kafka-compose.yml',
-            'connect-compose.yml',
-            'monitoring-compose.yml']
-    projectName = 'batch-bottleneck'
-}
-
-tasks.register('batchComposeUp') {
-    group = 'docker-compose'
-    dependsOn composeUp
-}
-tasks.register('batchComposeDown') {
-    group = 'docker-compose'
-    dependsOn composeDown
+    composeFilesByTask.each { taskName, composeFiles ->
+        delegate."$taskName" {
+            useComposeFiles = composeFiles
+            projectName = 'batch-bottleneck'
+        }
+    }
 }
