@@ -23,6 +23,7 @@ import ru.typik.batch.bottleneck.processing.properties.KafkaConfigurationPropert
 import ru.typik.batch.bottleneck.processing.properties.consumerConfig
 import ru.typik.batch.bottleneck.processing.properties.createSender
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.*
 
 
@@ -59,7 +60,7 @@ class AtLeastOnceProcessing(
                     val recordWaitWrapper = RecordWaitWrapper(
                         record,
                         UUID.randomUUID().toString(),
-                        LocalDateTime.now().plusHours(1)
+                        LocalDateTime.now(ZoneOffset.UTC).plusHours(1)
                     )
                     sendWaitRecord(recordWaitWrapper)
                         .doOnSuccess { record.receiverOffset().acknowledge() }
