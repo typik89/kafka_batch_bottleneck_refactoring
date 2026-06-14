@@ -42,11 +42,11 @@ class BatchProcessing(
         kafkaTask = kafkaReceiver.receiveExactlyOnce(sender.transactionManager())
             .concatMap<Void> { batch ->
                 batch
-                    .doOnNext { record -> logger.info("record : ${record.offset()} : ${record.key()} : ${record.value()}") }
+                    .doOnNext { record -> logger.trace("record : ${record.offset()} : ${record.key()} : ${record.value()}") }
                     .flatMapSequential { record ->
-                        Mono.fromCallable { logger.info("processing ${record.offset()}") }
+                        Mono.fromCallable { logger.trace("processing ${record.offset()}") }
                             .then(recordProcessor.invoke(record))
-                            .doFinally { logger.info("processed ${record.offset()}") }
+                            .doFinally { logger.trace("processed ${record.offset()}") }
                             .onErrorResume { ex -> sendDeadLetter(record, ex) }
                     }
                     .then(sender.transactionManager().commit())
