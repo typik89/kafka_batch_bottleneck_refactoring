@@ -63,12 +63,12 @@ class AtLeastOnceProcessing(
                         LocalDateTime.now(ZoneOffset.UTC).plusHours(1)
                     )
                     sendWaitRecord(recordWaitWrapper)
-                        .doOnSuccess { record.receiverOffset().acknowledge() }
                         .thenReturn(recordWaitWrapper)
                 },
                 kafkaConfigurationProperties.consumer.maxPollRecords,
                 kafkaConfigurationProperties.consumer.maxPollRecords
             )
+            .doOnNext { it.record.receiverOffset().acknowledge() }
             .flatMap(
                 { recordWaitWrapper ->
                     val record = recordWaitWrapper.record
